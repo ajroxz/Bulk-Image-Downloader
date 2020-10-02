@@ -6,4 +6,4 @@
 ## Requirements
 #### Python
 #### selenium module 
-#### firefox browser
+#### firefox/chrome browser
