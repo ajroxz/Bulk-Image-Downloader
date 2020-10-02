@@ -6,4 +6,6 @@
 ## Requirements
 #### Python
 #### selenium module 
-#### firefox/chrome browser
+#### firefox browser
+#### Run Using
+```python3 main.py```
