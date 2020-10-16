@@ -4,7 +4,7 @@
 ## Requirements
 #### Python
 #### selenium module 
-#### firefox browser
+#### firefox browser or you can use other browser but you have to download the web driver of that browser and also have to do a little change in the code. So, that the code will execute using that browser.
 
 #### Run Using
 ```python3 main.py```
