@@ -4,19 +4,17 @@ import time
 import os
 import shutil
 from os import system, name
+import multiprocessing
+from multiprocessing import Manager
 import urllib.request
 from selenium.webdriver.support.ui import WebDriverWait
+import threading
+import concurrent.futures
 
 
-class img:
-    name=""
+count = 0
 
-    def __init__(self,name):
-        self.name=name
-
-
-
-def google():
+def google(image,l):
 
     print('...........................google.........................................')
     driver = webdriver.Firefox()
@@ -26,7 +24,9 @@ def google():
     query = driver.find_element_by_name('q')
     driver.implicitly_wait(5)
 
-    query.send_keys(image.name + Keys.ENTER)
+    
+
+    query.send_keys(image + Keys.ENTER)
 
     time.sleep(3)
 
@@ -74,13 +74,11 @@ def google():
 
 
 
-    fh=open(image.name+'.txt','w')
+    
 
     for key,item in duplicate.items():
-        fh.write(str(key))
-        fh.write('\n')
-
-    fh.close()
+        l.append(key)
+    
 
 
                 
@@ -90,7 +88,7 @@ def google():
     driver.close()
 
 
-def yahoo():
+def yahoo(image,l):
 
     print('......................................yahoo............................................')
 
@@ -101,7 +99,7 @@ def yahoo():
     query = driver.find_element_by_name('p')
     driver.implicitly_wait(5)
 
-    query.send_keys(image.name+ Keys.ENTER)
+    query.send_keys(image + Keys.ENTER)
 
     time.sleep(3)
 
@@ -149,13 +147,10 @@ def yahoo():
 
 
 
-    fh=open(image.name+'.txt','a')
-    fh.write('\n')
+    
     for key,item in duplicate.items():
-        fh.write(str(key))
-        fh.write('\n')
-
-    fh.close()
+        l.append(key)
+    
 
 
                 
@@ -165,7 +160,7 @@ def yahoo():
     driver.close()
 
 
-def bing():
+def bing(image,l):
     print('..................bing.........................')
     driver = webdriver.Firefox()
 
@@ -174,7 +169,7 @@ def bing():
     query = driver.find_element_by_name('q')
     driver.implicitly_wait(5)
 
-    query.send_keys(image.name + Keys.ENTER)
+    query.send_keys(image + Keys.ENTER)
 
     time.sleep(3)
 
@@ -222,13 +217,10 @@ def bing():
 
 
 
-    fh=open(image.name+'.txt','a')
-    fh.write('\n')
+    
     for key,item in duplicate.items():
-        fh.write(str(key))
-        fh.write('\n')
-
-    fh.close()
+        l.append(key)
+    
 
 
                 
@@ -238,51 +230,62 @@ def bing():
     driver.close()
 
 
-def downloader():
+
+def download_using_thread(j):
+
+    global count
+        
+    try:
+        count+=1
+        
+        urllib.request.urlretrieve(j,"{}.jpg".format(0+count)) 
+    except:
+        pass   
+
+
+
+
+def downloader(l,image):
     print('...................Downloading......................................./')
     
     cwd = os.getcwd()
-    dir = os.path.join(cwd,image.name)
+    dir = os.path.join(cwd,image)
     os.mkdir(dir)
-    source = cwd + "\\" + image.name +".txt"
-    dest = dir + "\\" + image.name + ".txt"
-    shutil.copyfile(source,dest)
-    os.remove(source)
 
     os.chdir(dir)
 
-    
-    fh=open(image.name+'.txt','r')
-    l=list()
-    c=0
-    for i in fh:
-        if i == '\n':
-            continue
-        l.append(i)
-
     print("\ntotal images are " + str(len(l)))
 
-    fh.close()
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(download_using_thread,l)
 
-    os.remove(dest)
-
-    count=0
-    for j in l:
-        try:
-            count+=1
-            urllib.request.urlretrieve(j, image.name+"{}.jpg".format(0+count)) 
-        except:
-            continue       
+        
 
     
 if __name__ == "__main__":
-    x = input("Enter name of which image you want to download: ")
+    imge = input("Enter name of which image you want to download: ")
 
-    image = img(x)
+    intial = time.time()
+    manager = Manager()
 
-    
+    l = manager.list()
 
-    google()
-    yahoo()
-    bing()
-    downloader()  
+    p1 = multiprocessing.Process(target=google,args=[imge,l])
+    p2 = multiprocessing.Process(target=yahoo,args=[imge,l])
+    p3 = multiprocessing.Process(target=bing,args=[imge,l])
+
+    p1.start()
+    p2.start()
+    p3.start()
+
+    p1.join()
+    p2.join()
+    p3.join()
+
+    print('\ntotal images from all search engines are:',len(l))
+
+    downloader(l,imge)
+
+    print("total time taken to complete the program:",time.time()-intial, ' seconds')  
+
+    a=input()
